@@ -1,66 +1,102 @@
+const DEFAULT_MODE = 'color';
+const DEFAULT_COLOR = 'black';
+const DEFAULT_SIZE = 16;
+
+let currentMode = DEFAULT_MODE;
+let currentColor = DEFAULT_COLOR;
+let currentSize = DEFAULT_SIZE;
+
 const grid = document.querySelector('#grid');
-let gridSize = 16;
 const gridElements = document.querySelectorAll('.grid-element');
+const setColor = document.querySelector('#set-color');
+const colorMode = document.querySelector('#color-mode');
+const rainbowMode = document.querySelector('#rainbow-mode');
+const eraserMode = document.querySelector('#eraser');
+const clearMode = document.querySelector('#clear');
 
 
-function setGridSize() {
-    grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-    grid.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
+setColor.oninput = (e) =>  setCurrentColor(e.target.value);
+colorMode.onclick = () => setCurrentMode('color');
+rainbowMode.onclick = () => setCurrentMode('rainbow');
+eraserMode.onclick = () => setCurrentMode('eraser');
+clearMode.onclick = () => setupGrid(currentSize);
+
+
+function setCurrentColor(color) {
+    currentColor = color;
 }
 
-createGrid();
 
+function setGridSize(currentSize) {
+    grid.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
+    grid.style.gridTemplateRows = `repeat(${currentSize}, 1fr)`;
+}
 
-function createGrid() {
+function clearGrid() {
     grid.innerHTML = '';
-    for (let i = 0; i < gridSize * gridSize; i++) {
+}
+
+function setupGrid(currentSize) {
+    setGridSize(currentSize);
+    clearGrid();
+    for (let i = 0; i < currentSize * currentSize; i++) {
         const gridElement = document.createElement('div');
         gridElement.classList.add('grid-element');
+        gridElement.addEventListener('mouseover', changeColor);
+        gridElement.addEventListener('mousedown', changeColor);
         grid.appendChild(gridElement);
     }
 }
 
 
 let slider = document.getElementById("myRange");
-let output = document.getElementById("demo");
-output.innerHTML = slider.value; // Display the default slider value
-
-// Update the current slider value (each time you drag the slider handle)
-// slider.oninput = function() {
-//   output.innerHTML = this.value;
-//   gridSize = this.value;
-//   setGridSize();
-//   createGrid();
-// }
+let output = document.getElementById("slide-size");
+output.innerHTML = `${slider.value} x ${slider.value}`; // Display the default slider value
 
 slider.oninput = function() {
-    output.innerHTML = this.value;
+    output.innerHTML = `${this.value} x ${this.value}`;
 };
 
 slider.onpointerup = function() {
-    gridSize = this.value;
-    setGridSize();
-    createGrid();
+    currentSize = this.value;
+    setupGrid(currentSize);
 };
-
-// gridElements.forEach(gridElement => gridElement.addEventListener('click', () => {
-//     gridElement.target.classList.add('playing');
-// }));
 
 let mouseDown = false;
 
-document.body.onmousedown = () => mouseDown = true;
-document.body.onmouseup = () => mouseDown = false;
+document.body.onmousedown = () => {
+    mouseDown = true;
+    console.log(mouseDown);
+};
+document.body.onmouseup = () => {
+    mouseDown = false;
+    console.log(mouseDown);
+};
 
 function changeColor(e) {
-    e.target.style.backgroundColor = '#000';
+    if (e.type === 'mouseover' && !mouseDown) return;
+    if (currentMode === 'color') {
+        e.target.style.backgroundColor = currentColor;
+    } else if (currentMode === 'rainbow') {
+        const randomR = Math.floor(Math.random() * 256);
+        const randomG = Math.floor(Math.random() * 256);
+        const randomB = Math.floor(Math.random() * 256);
+        e.target.style.backgroundColor = `rgb(${randomR}, ${randomG}, ${randomB})`;
+    } else if (currentMode === 'eraser') {
+        e.target.style.backgroundColor = '#fff';
+    }
 }
 
-grid.addEventListener('click', () => {
-    const gridElements = document.querySelectorAll('.grid-element');
-    gridElements.forEach(gridElement => gridElement.addEventListener('click', changeColor));
-});
+function setCurrentMode(newMode) {
+    if (newMode === 'color') {
+        currentMode = 'color';
+    } else if (newMode === 'rainbow') {
+        currentMode = 'rainbow';
+    } else if (newMode === 'eraser') {
+        currentMode = 'eraser';
+    }
+}
 
 window.onload = () => {
-    console.log('Hello');
+    setupGrid(DEFAULT_SIZE);
 };
